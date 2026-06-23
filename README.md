@@ -5,7 +5,7 @@ This repository contains the WinBUGS code used in:
 Component Network Meta-Analysis Methods for Combining Individual Participant Data and Aggregate Data, Research Synthesis Methods
 
 ## Contents
-- MainEffectsCNMAIPDModel.txt: WinBUGS model code for Model D
+- MainEffectsCNMAIPDCovSLAModel.txt: WinBUGS model code for Model D
 - 
 
 ## Notes
