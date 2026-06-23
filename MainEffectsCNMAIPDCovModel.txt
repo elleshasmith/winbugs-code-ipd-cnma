@@ -1,4 +1,4 @@
-# NMA Model including IPD and Summary Aggregate Data - No Covariates
+# NMA Model including IPD and Summary Aggregate Data - Individual-Level and Study-Level Covariate-Adjustment
 
 # Begin the model
 model {
