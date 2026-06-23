@@ -1,0 +1,146 @@
+# NMA Model including IPD and Summary Aggregate Data - No Covariates
+
+# Begin the model
+model {
+
+### Part 1: Model for non-clustered IPD trial data ###
+
+# For all individuals in the individually allocated IPD
+for (i in 1:n.non.cluster.subjects){
+
+# Bernoulli distribution for each individual outcome
+outcome[i]~dbern(p[i])
+				
+# Model for non-clustered IPD data using logit link
+logit(p[i]) <- mu[s[i]] + delta[index[i]]*(1-equals(t1[index[i]], b1[index[i]])) 
+								
+}
+								
+# Vague priors for non-cluster IPD
+for (j in 1:n.ipd.non.cluster.trials){ 
+		mu[j]~dnorm(0, 0.01)	
+}
+	
+	
+### Part 2: Model fo IPD cluster trial data ###
+
+# For every cluster allocated IPD induvidual
+for (i in 1:n.cluster.subjects){
+
+# Outcome for each ind11ividual follow a Bernoulli distribution
+c.outcome[i]~dbern(c.p[i])
+
+# Model for cluster IPD data
+logit(c.p[i]) <- c.mu[c.s[i], c.cluster[i]] +delta[c.index[i] + n.non.cluster.arms]*(1-equals(t1[c.index[i] + n.non.cluster.arms],b1[c.index[i] + n.non.cluster.arms]))
+	
+}
+
+# Vague priors for cluster IPD
+for (i in 1:n.ipd.cluster.trials){		# For each cluster trial
+
+
+for (j in 1:n.cluster.max){		
+	
+# Baseline effect for each cluster is normally distributed with a trial specific mean mu.mean and prec inv.tau.sq.mu.
+c.mu[i,j]~dnorm(mu.mean[i], inv.tau.sq.mu[i])		
+}
+			
+mu.mean[i]~dnorm(0, 0.01) 		# Baseline trial specific mean odds is normally distributed
+inv.tau.sq.mu[i]<-1/ (sigma.mu[i]*sigma.mu[i])		# Trial specific baseline odds
+tau.sq.mu[i]<-sigma.mu[i]*sigma.mu[i]
+sigma.mu[i]~dunif(0,2) 	
+}
+		
+# Individual level priors		
+for (i in 1: (n.non.cluster.arms + n.cluster.arms)){ 		# For each arm in the cluster and individually randomised IPD trials
+
+# The intervention effects delta, for each arm, are normally distributed with arm specific mean md and precision prec
+delta[i]~dnorm(md[i], prec)
+
+# The arm specific mean intervention effects are the difference in effect between the treatment and baseline groups
+md[i]<-d[t1[i]]-d[b1[i]]
+
+}
+				
+### Part 3: Model for non-cluster and cluster aggregate data
+
+# For every aggregate study arm
+			for (i in 1:n.agg.arms){
+			
+#Binomial likelihood for AD data
+
+# Aggregate outcome is binomially distributed
+outcome.ad[i]~dbin(pa[i], n[i])
+
+# Model for aggregate data
+logit(pa[i])
+# Baseline odds for each study
+<-mu.ad[a.s[i]]
+# Intervention effect in the study arms
++delta[i+n.non.cluster.arms+n.cluster.arms]*(1-equals(a.t[i], a.b[i]))
+				
+# Intervention effects are distributed normally with arm specific mean and precision 
+delta[i+n.non.cluster.arms+n.cluster.arms]~dnorm(md.ad[i], prec)
+				
+# Mean intervention effect for each arm is the diffeence between the intervention effects for the treatment and the baseline		
+md.ad[i]<-d[a.t[i]]-d[a.b[i]]
+}
+				
+# Vague priors for AD trial baselines
+for (j in 1:n.agg.trials){
+mu.ad[j]~dnorm(0, 0.01)
+}
+						
+### Part 4: Model for combining all treatment effect estimates ###
+
+# Usual care intervention covariate interaction and intervention effect set to 0
+d[1]<-0
+
+# Vague priors for basic parameters
+for (i in 2:max.treat){
+	d[i]<- dc[2]*(1-equals(Ed[i],0)) + dc[3]*(1-equals(Eq[i],0))  + dc[4]*(1-equals(HSI[i],0)) + dc[5]*(1-equals(In[i],0)) 	
+}
+
+# Priors for component effects
+
+dc[1]<-0
+for (k in 2:nc){
+	dc[k]~dnorm(0,0.01)
+}
+
+for (k in 1:nc){dall[k]<- dc[k]}
+
+dall[6]<- dc[2]+dc[3]
+dall[7]<- dc[2]+dc[4]
+dall[8]<- dc[2]+dc[5]
+dall[9]<- dc[3]+dc[4]
+dall[10]<-dc[3]+dc[5]
+dall[11]<-dc[4]+dc[5]
+dall[12]<-dc[2]+dc[3]+dc[4]
+dall[13]<-dc[2]+dc[3]+dc[5]
+dall[14]<-dc[2]+dc[4]+dc[5]
+dall[15]<-dc[3]+dc[4]+dc[5]
+dall[16]<-dc[2]+dc[3]+dc[4]+dc[5]
+
+for (k in 1:nt){
+	or[k]<- exp(dall[k])
+}								
+
+## Vague priors for random effects - intervention effect
+
+tau~dunif(0,2)
+tau.sq<-tau*tau
+prec<-1/(tau.sq)
+
+#All pairwise log odds ratios and odds ratios
+for (k in 1:nt){
+
+rkall[k] <- nt+1-rank(dall[],k) # assumes events are “good”
+pall[k] <- equals(rkall[k],1) #calculate probability that treat k is best
+
+}
+
+}
+
+
+
