@@ -92,7 +92,7 @@ logit(pa[i])
 # Intervention effects are distributed normally with arm specific mean and precision 
 delta[i+n.non.cluster.arms+n.cluster.arms]~dnorm(md.ad[i], prec)
 				
-# Mean intervention effect for each arm is the diffeence between the intervention effects for the treatment and the baseline		
+# Mean intervention effect for each arm is the difference between the intervention effects for the treatment and the baseline		
 md.ad[i]<-d[a.t[i]]-d[a.b[i]]+ (bb[a.t[i]] - bb[a.b[i]]) * a.cov[i]
 
 }
